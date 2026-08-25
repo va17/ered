@@ -183,6 +183,14 @@ ered_cluster:command_all(cluster_ref(), command(), timeout()) -> [reply()].
 
 Send the same command to all connected primary nodes.
 
+### `ered_cluster:get_client/2`
+
+```Erlang
+ered_cluster:get_client(cluster_ref(), key()) -> client_ref() | {error, unmapped_slot}.
+```
+
+Returns the primary client used to route a key.
+
 ### `ered_cluster:get_clients/1`
 
 ```Erlang
@@ -191,6 +199,15 @@ ered_cluster:get_clients(cluster_ref()) -> [client_ref()].
 
 Get all primary node clients. Use the `ered` module for sending commands to the
 individual instances.
+
+### `ered_cluster:get_clients/2`
+
+```Erlang
+ered_cluster:get_clients(cluster_ref(), [key()]) -> [client_ref() | {error, unmapped_slot}].
+```
+
+Returns the primary client for each key. The returned clients preserve the input
+order and can be used to group commands by cluster node.
 
 ### `ered_cluster:get_addr_to_client_map/1`
 
