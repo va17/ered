@@ -11,7 +11,7 @@
 -export([connect/2, close/1,
          command/3, command/4, command_async/4, command_async/5,
          command_all/2, command_all/3,
-         get_clients/1, get_client/2, get_clients/2,
+         get_clients/1, primary_by_key/2, primaries_by_keys/2,
          get_addr_to_client_map/1,
          update_slots/1, update_slots/2,
          connect_node/2
@@ -239,21 +239,21 @@ get_clients(ServerRef) ->
     gen_server:call(ServerRef, get_clients).
 
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
--spec get_client(cluster_ref(), key()) -> client_ref() | {error, unmapped_slot}.
+-spec primary_by_key(cluster_ref(), key()) -> client_ref() | {error, unmapped_slot}.
 %%
 %% Return the primary client used to route a key.
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-get_client(ServerRef, Key) ->
-    gen_server:call(ServerRef, {get_client, Key}).
+primary_by_key(ServerRef, Key) ->
+    gen_server:call(ServerRef, {primary_by_key, Key}).
 
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
--spec get_clients(cluster_ref(), [key()]) -> [client_ref() | {error, unmapped_slot}].
+-spec primaries_by_keys(cluster_ref(), [key()]) -> [client_ref() | {error, unmapped_slot}].
 %%
 %% Return the primary client for each key. The returned clients preserve the
 %% input order and can be used to group commands by cluster node.
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-get_clients(ServerRef, Keys) ->
-    gen_server:call(ServerRef, {get_clients, Keys}).
+primaries_by_keys(ServerRef, Keys) ->
+    gen_server:call(ServerRef, {primaries_by_keys, Keys}).
 
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 -spec get_addr_to_client_map(cluster_ref()) -> #{addr() => client_ref()}.
@@ -351,10 +351,10 @@ handle_call({command, Command, Key, Opts}, From, State) ->
 handle_call(get_clients, _From, State) ->
     {reply, tuple_to_list(State#st.clients), State};
 
-handle_call({get_client, Key}, _From, State) ->
+handle_call({primary_by_key, Key}, _From, State) ->
     {reply, slot_to_client(ered_lib:hash(Key), State), State};
 
-handle_call({get_clients, Keys}, _From, State) ->
+handle_call({primaries_by_keys, Keys}, _From, State) ->
     Clients = [slot_to_client(ered_lib:hash(Key), State) || Key <- Keys],
     {reply, Clients, State};
 
